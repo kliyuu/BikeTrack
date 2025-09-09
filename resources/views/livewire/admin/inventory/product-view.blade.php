@@ -84,7 +84,7 @@
             </div>
 
             <div class="w-full space-y-4">
-              @if ($product->primaryImage)
+              @if ($product->primaryImage && Storage::disk('public')->exists($product->primaryImage->url))
                 <img src='{{ asset("storage/{$product->primaryImage->url}") }}'
                   alt="{{ $product->primaryImage->alt_text }}" class="w-auto max-h-48">
               @else
