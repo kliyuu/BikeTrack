@@ -8,7 +8,7 @@
 
       <ul class="mt-8 flex justify-start gap-6 sm:mt-0 sm:justify-end">
         <li>
-          <a href="#" rel="noreferrer" target="_blank" class="text-gray-700 transition hover:opacity-75">
+          <a href="https://www.facebook.com/anthony.atienza.790" rel="noreferrer" target="_blank" class="text-gray-700 transition hover:opacity-75 dark:text-gray-300">
             <span class="sr-only">Facebook</span>
 
             <svg class="size-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -19,7 +19,7 @@
           </a>
         </li>
 
-        <li>
+        {{-- <li>
           <a href="#" rel="noreferrer" target="_blank" class="text-gray-700 transition hover:opacity-75">
             <span class="sr-only">Instagram</span>
 
@@ -29,9 +29,9 @@
                 clip-rule="evenodd" />
             </svg>
           </a>
-        </li>
+        </li> --}}
 
-        <li>
+        {{-- <li>
           <a href="#" rel="noreferrer" target="_blank" class="text-gray-700 transition hover:opacity-75">
             <span class="sr-only">Twitter</span>
 
@@ -40,21 +40,21 @@
                 d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
             </svg>
           </a>
-        </li>
+        </li> --}}
 
-        <li>
+        {{-- <li>
           <a href="#" rel="noreferrer" target="_blank" class="text-gray-700 transition hover:opacity-75">
             <span class="sr-only">Youtube</span>
 
             <i class="ti ti-brand-youtube-filled text-2xl"></i>
           </a>
-        </li>
+        </li> --}}
       </ul>
     </div>
 
     <div class="grid grid-cols-1 gap-8 border-t border-gray-100 pt-8 sm:grid-cols-2 lg:grid-cols-4 lg:pt-16">
       <div>
-        <p class="font-medium text-gray-900">Categories</p>
+        <p class="font-medium text-gray-900 dark:text-white">Categories</p>
 
         <ul class="mt-6 space-y-4 text-sm">
           @php
@@ -62,51 +62,40 @@
           @endphp
           @foreach ($categories as $category)
             <li>
-              <a href="#" class="text-gray-700 transition hover:opacity-75">{{ $category->name }}</a>
+              <a href="{{ route('shop.catalog', ['category' => $category->id]) }}"
+                class="text-gray-700 transition hover:opacity-75 dark:text-gray-300">
+                {{ $category->name }}
+              </a>
             </li>
           @endforeach
         </ul>
       </div>
 
-      <div>
-        <p class="font-medium text-gray-900">Company</p>
+      <div class="hidden">
+        <p class="font-medium text-gray-900 dark:text-white">Company</p>
 
         <ul class="mt-6 space-y-4 text-sm">
           <li>
-            <a href="#" class="text-gray-700 transition hover:opacity-75"> About </a>
-          </li>
-
-          <li>
-            <a href="#" class="text-gray-700 transition hover:opacity-75"> Meet the Team </a>
-          </li>
-
-          <li>
-            <a href="#" class="text-gray-700 transition hover:opacity-75"> Accounts Review </a>
+            <a href="#" class="text-gray-700 transition hover:opacity-75 dark:text-gray-300"> About </a>
           </li>
         </ul>
       </div>
 
-      <div>
-        <p class="font-medium text-gray-900">Helpful Links</p>
+      <div class="hidden">
+        <p class="font-medium text-gray-900 dark:text-white">Helpful Links</p>
 
         <ul class="mt-6 space-y-4 text-sm">
           <li>
-            <a href="#" class="text-gray-700 transition hover:opacity-75"> Contact </a>
+            <a href="#" class="text-gray-700 transition hover:opacity-75 dark:text-gray-300"> Contact </a>
           </li>
 
           <li>
-            <a href="#" class="text-gray-700 transition hover:opacity-75"> FAQs </a>
-          </li>
-
-          <li>
-            <a href="#" class="text-gray-700 transition hover:opacity-75"> Live Chat </a>
+            <a href="#" class="text-gray-700 transition hover:opacity-75 dark:text-gray-300"> FAQs </a>
           </li>
         </ul>
       </div>
     </div>
 
-    <p class="text-xs text-gray-500">&copy; {{ date('Y') }}. BikerZone. All rights reserved.</p>
+    <p class="text-xs text-gray-500 dark:text-gray-400">&copy; {{ date('Y') }}. BikerZone. All rights reserved.</p>
   </div>
 </footer>
-
-<livewire:shop.cart />

@@ -11,15 +11,15 @@ use Livewire\Component;
 #[Title('BikeTrack Shop')]
 class Index extends Component
 {
-  public function getCategoriesProperty()
-  {
-    return Category::query()->take(3)->get();
-  }
+    public function getCategoriesProperty()
+    {
+        return Category::query()->take(3)->get();
+    }
 
-  public function render()
-  {
-    return view('livewire.shop.index', [
-      'categories' => $this->categories
-    ]);
-  }
+    public function render()
+    {
+        return view('livewire.shop.index', [
+            'categories' => $this->categories,
+        ]);
+    }
 }

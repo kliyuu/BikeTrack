@@ -26,6 +26,9 @@ Route::middleware('auth')->group(function () {
 
     Route::get('confirm-password', ConfirmPassword::class)
         ->name('password.confirm');
+
+    Route::get('accept-tos', \App\Livewire\Auth\AcceptTos::class)
+        ->name('tos.accept');
 });
 
 Route::post('logout', App\Livewire\Actions\Logout::class)

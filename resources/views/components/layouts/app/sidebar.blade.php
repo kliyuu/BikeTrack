@@ -12,8 +12,10 @@
       class="max-lg:hidden dark:hidden" />
     <flux:brand href="#" logo="https://fluxui.dev/img/demo/dark-mode-logo.png" name="Acme Inc."
       class="max-lg:hidden! hidden dark:flex" /> --}}
+
     <flux:spacer />
-    <flux:navbar class="me-4">
+
+    <flux:navbar>
       <flux:dropdown x-data align="end">
         <flux:button variant="subtle" square class="group" aria-label="Preferred color scheme">
           <flux:icon.sun x-show="$flux.appearance === 'light'" variant="mini" class="text-zinc-500 dark:text-white" />
@@ -28,6 +30,8 @@
         </flux:menu>
       </flux:dropdown>
     </flux:navbar>
+
+    <livewire:notifications.admin />
 
     <flux:dropdown position="top" align="start">
       <flux:profile :initials="auth()->user()->initials()" icon-trailing="chevron-down" />
@@ -72,16 +76,16 @@
   <flux:sidebar sticky stashable class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
     <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
 
-    <a href="{{ route('shop') }}" class="me-5 flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
+    <a href="{{ route('shop.catalog') }}" class="me-5 flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
       <x-app-logo />
     </a>
 
     <flux:navlist variant="outline" class="mt-4">
-      {{-- <flux:navlist.group :heading="__('PLATFORM')" class="grid"> --}}
+      {{-- Dashboard --}}
       <flux:navlist.item icon="squares-2x2" :href="route('admin.dashboard')"
         :current="request()->routeIs('admin.dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
-      {{-- </flux:navlist.group> --}}
 
+      {{-- Inventory --}}
       <flux:navlist.group :heading="__('INVENTORY')" class="grid">
         <flux:navlist.item icon="cube" :href="route('admin.products')"
           :current="request()->routeIs('admin.products')" wire:navigate>{{ __('Products') }}</flux:navlist.item>
@@ -94,21 +98,29 @@
         {{-- <flux:navlist.item icon="chart-bar" :href="route('admin.stock-levels')"
           :current="request()->routeIs('admin.stock-levels')" wire:navigate>{{ __('Stock Levels') }}</flux:navlist.item> --}}
         <flux:navlist.item icon="clock" :href="route('admin.restock-history')"
-          :current="request()->routeIs('admin.restock-history')" wire:navigate>{{ __('Restock History') }}</flux:navlist.item>
+          :current="request()->routeIs('admin.restock-history')" wire:navigate>{{ __('Restock History') }}
+        </flux:navlist.item>
       </flux:navlist.group>
 
+      {{-- Orders --}}
       <flux:navlist.group :heading="__('ORDERS')" class="grid">
         <flux:navlist.item icon="shopping-cart" :href="route('admin.orders')"
           :current="request()->routeIs('admin.orders')" wire:navigate>{{ __('All Orders') }}</flux:navlist.item>
+        <flux:navlist.item icon="arrow-path-rounded-square" :href="route('admin.returns')"
+          :current="request()->routeIs('admin.returns')" wire:navigate>{{ __('Returns') }}</flux:navlist.item>
       </flux:navlist.group>
 
+      {{-- Reports --}}
       <flux:navlist.group :heading="__('REPORTS')" class="grid">
         <flux:navlist.item icon="presentation-chart-line" :href="route('admin.sales-reports')"
-          :current="request()->routeIs('admin.sales-reports')" wire:navigate>{{ __('Sales Reports') }}</flux:navlist.item>
+          :current="request()->routeIs('admin.sales-reports')" wire:navigate>{{ __('Sales Reports') }}
+        </flux:navlist.item>
         <flux:navlist.item icon="rectangle-stack" :href="route('admin.inventory-reports')"
-          :current="request()->routeIs('admin.inventory-reports')" wire:navigate>{{ __('Inventory Reports') }}</flux:navlist.item>
+          :current="request()->routeIs('admin.inventory-reports')" wire:navigate>{{ __('Inventory Reports') }}
+        </flux:navlist.item>
       </flux:navlist.group>
 
+      {{-- User Management --}}
       <flux:navlist.group :heading="__('USER MANAGEMENT')" class="grid">
         <flux:navlist.item icon="users" :href="route('admin.users')" :current="request()->routeIs('admin.users')"
           wire:navigate>{{ __('Users') }}</flux:navlist.item>
@@ -211,7 +223,8 @@
 
         <form method="POST" action="{{ route('logout') }}" class="w-full">
           @csrf
-          <flux:menu.item as="button" type="submit" icon="arrow-right-start-on-rectangle" class="w-full cursor-pointer">
+          <flux:menu.item as="button" type="submit" icon="arrow-right-start-on-rectangle"
+            class="w-full cursor-pointer">
             {{ __('Log Out') }}
           </flux:menu.item>
         </form>
@@ -222,6 +235,7 @@
   {{ $slot }}
 
   @fluxScripts
+  @stack('scripts')
 </body>
 
 </html>

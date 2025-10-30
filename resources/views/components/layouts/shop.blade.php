@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>{{ $title }} | {{ config('app.name') }}</title>
+  <title>{{ $title ?? null }} | {{ config('app.name') }}</title>
 
   <link rel="icon" href="/images/bikerzone.jpg" type="image/jpg">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -27,9 +27,13 @@
     {{ $slot }}
   </flux:container>
 
-  @if (Auth::check() && Auth::user()->cartItems()->count() > 0)
-    <x-cart-button />
+  @if (!Route::is('shop.checkout'))
+    <livewire:shop.cart />
+    @if (Auth::check() && Auth::user()->cartItems()->count() > 0)
+      <x-cart-button />
+    @endif
   @endif
+
 
   @include('partials.shop.footer')
   @fluxScripts

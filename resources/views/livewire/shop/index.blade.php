@@ -19,7 +19,7 @@
       </div>
 
       <div class="flex items-center justify-center mt-8 md:mt-0">
-        <img src="https://picsum.photos/id/237/400" alt="Hero Image">
+        <img src="{{ asset('images/hero.jpg') }}" alt="Hero Image" class="w-full rounded-lg shadow-lg">
       </div>
     </div>
   </section>
@@ -28,11 +28,11 @@
     <div class="mx-auto max-w-7xl">
       <div class="mx-auto max-w-2xl lg:max-w-none pb-16">
         <div class="flex justify-center">
-          <h2 class="text-2xl font-bold text-gray-900">Categories</h2>
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Categories</h2>
 
           <flux:spacer />
           <flux:button variant="ghost" size="sm" icon:trailing="arrow-right" href="{{ route('shop.catalog') }}"
-            class="!text-blue-600 hover:!text-blue-700">
+            class="!text-blue-600 hover:!text-blue-400">
             Browse All Categories
           </flux:button>
         </div>
@@ -50,7 +50,7 @@
                   {{ $category->name }}
                 </a>
               </h3>
-              <p class="text-sm text-gray-500">{{ $category->description }}</p>
+              <p class="text-sm text-gray-500 dark:text-gray-300">{{ $category->description }}</p>
             </div>
           @endforeach
         </div>

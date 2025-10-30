@@ -5,6 +5,7 @@ namespace App\Livewire\Admin;
 use App\Models\Client;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use Carbon\Carbon;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -12,79 +13,119 @@ use Livewire\Component;
 #[Title('Dashboard')]
 class Dashboard extends Component
 {
-  public $totalProducts;
-  public $ordersToday;
-  public $totalSalesToday;
-  public $lowStockCount;
-  public $totalClients;
-  public $pendingOrders;
-  public $totalRevenue;
-  public $topProducts;
-  public $recentOrders;
-  public $stockAlerts;
+    public $totalProducts;
 
-  protected $listeners = [
-    'refreshDashboard' => '$refresh',
-  ];
+    public $ordersToday;
 
-  public function mount()
-  {
-    $this->loadStatistics();
-  }
+    public $totalSalesToday;
 
-  public function loadStatistics()
-  {
-    $this->totalProducts = Product::count();
-    $this->totalClients = Client::count();
+    public $lowStockCount;
 
-    $today = Carbon::today();
-    $this->ordersToday = Order::query()
-      ->whereDate('created_at', $today)->count();
-    $this->totalSalesToday = Order::query()
-      ->whereDate('created_at', $today)
-      ->where('status', '!=', 'cancelled')
-      ->sum('total_amount');
+    public $totalClients;
 
-    $this->lowStockCount = Product::query()
-      ->whereColumn('cached_stock', '<=', 'low_stock_threshold')
-      ->count();
+    public $pendingOrders;
 
-    $this->stockAlerts = Product::query()
-      ->whereColumn('cached_stock', '<=', 'low_stock_threshold')
-      ->with(['category', 'brand'])
-      ->take(5)
-      ->get();
+    public $totalRevenue;
 
-    $this->pendingOrders = Order::query()
-      ->where('status', 'pending')
-      ->count();
+    public $topProducts;
 
-    $this->totalRevenue = Order::query()
-      ->where('created_at', '>=', Carbon::now()->subDays(30))
-      ->where('status', '!=', 'cancelled')
-      ->sum('total_amount');
+    public $recentOrders;
 
-    $this->topProducts = Product::query()
-      ->withCount('orderItems')
-      ->orderBy('order_items_count', 'desc')
-      ->take(5)
-      ->get();
+    public $stockAlerts;
 
-    $this->recentOrders = Order::query()
-      ->with(['client'])
-      ->orderBy('created_at', 'desc')
-      ->take(5)
-      ->get();
-  }
+    protected $listeners = [
+        'refreshDashboard' => '$refresh',
+    ];
 
-  public function refreshStats()
-  {
-    $this->loadStatistics();
-    $this->dispatch('refreshed');
-  }
+    public function mount()
+    {
+        $this->loadStatistics();
+    }
 
-  public function render()
-  {
-    return view('livewire.admin.dashboard');
-  }
+    public function loadStatistics()
+    {
+        $this->totalProducts = Product::query()->count();
+        $this->totalClients = Client::query()->count();
+
+        $today = Carbon::today();
+        $this->ordersToday = Order::query()
+            ->whereDate('created_at', $today)->count();
+
+        $this->totalSalesToday = Order::query()
+            ->whereDate('created_at', $today)
+            ->where('status', '!=', 'cancelled')
+            ->sum('total_amount');
+
+        $this->lowStockCount = ProductVariant::query()
+            ->with('product')
+            ->whereHas('product', function ($query) {
+                $query->where('is_active', true);
+            })
+            ->where('is_active', true)
+            ->where('cached_stock', '>', 0)
+            ->whereColumn('cached_stock', '<=', 'low_stock_threshold')
+            ->count();
+
+        $this->stockAlerts = ProductVariant::query()
+            ->with(['product.category'])
+            ->whereHas('product', function ($query) {
+                $query->where('is_active', true);
+            })
+            ->where('is_active', true)
+            ->where('cached_stock', '>', 0)
+            ->whereColumn('cached_stock', '<=', 'low_stock_threshold')
+            ->take(5)
+            ->get();
+
+        $this->pendingOrders = Order::query()
+            ->where('status', 'pending')
+            ->count();
+
+        $this->totalRevenue = Order::query()
+            ->where('created_at', '>=', Carbon::now()->subDays(30))
+            ->where('status', '!=', 'cancelled')
+            ->sum('total_amount');
+
+        $this->topProducts = ProductVariant::query()
+            ->with(['product.category', 'product.orderItems'])
+            ->whereHas('product', function ($query) {
+                $query->where('is_active', true);
+            })
+            ->where('is_active', true)
+            ->has('orderItems')
+            ->withCount('orderItems')
+            ->orderBy('order_items_count', 'desc')
+            ->take(5)
+            ->get();
+
+        $this->recentOrders = Order::query()
+            ->with(['client'])
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+    }
+
+    public function refreshStats()
+    {
+        $this->loadStatistics();
+        $this->dispatch('refreshed');
+    }
+
+    public function getStatusBadgeColor($status)
+    {
+        return match ($status) {
+            'pending' => 'yellow',
+            'confirmed' => 'blue',
+            'processing' => 'indigo',
+            'shipped' => 'purple',
+            'delivered' => 'green',
+            'cancelled' => 'red',
+            default => 'zinc',
+        };
+    }
+
+    public function render()
+    {
+        return view('livewire.admin.dashboard');
+    }
 }

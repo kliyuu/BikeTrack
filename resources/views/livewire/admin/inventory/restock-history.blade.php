@@ -105,7 +105,8 @@
           <flux:label>Products</flux:label>
           <flux:select wire:model.live="brandFilter" placeholder="All Products">
             @foreach ($products as $product)
-              <flux:select.option value="{{ $product->id }}" class="text-gray-700">{{ $product->name }}</flux:select.option>
+              <flux:select.option value="{{ $product->id }}" class="text-gray-700">{{ $product->name }}
+              </flux:select.option>
             @endforeach
           </flux:select>
         </div>
@@ -125,22 +126,18 @@
         <thead class="bg-gray-50 dark:bg-gray-700">
           <tr>
             <th scope="col"
-              class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider text-nowrap">
               <button wire:click="sortBy('created_at')"
-                class="flex items-center hover:text-gray-700 dark:hover:text-gray-200">
+                class="flex items-center uppercase hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer">
                 Date & Time
                 @if ($sortField === 'created_at')
-                  <svg class="ml-1 w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    @if ($sortDirection === 'asc')
-                      <path fill-rule="evenodd"
-                        d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"
-                        clip-rule="evenodd" />
-                    @else
-                      <path fill-rule="evenodd"
-                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                        clip-rule="evenodd" />
-                    @endif
-                  </svg>
+                  @if ($sortDirection === 'asc')
+                    <flux:icon name="chevron-up" class="ml-1 w-3 h-3" />
+                  @else
+                    <flux:icon name="chevron-down" class="ml-1 w-3 h-3" />
+                  @endif
+                @else
+                  <flux:icon name="chevron-up-down" class="ml-1 size-4" />
                 @endif
               </button>
             </th>
@@ -152,29 +149,13 @@
               Warehouse</th>
             <th scope="col"
               class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-              <button wire:click="sortBy('quantity')"
-                class="flex items-center hover:text-gray-700 dark:hover:text-gray-200">
-                Quantity
-                @if ($sortField === 'quantity')
-                  <svg class="ml-1 w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    @if ($sortDirection === 'asc')
-                      <path fill-rule="evenodd"
-                        d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"
-                        clip-rule="evenodd" />
-                    @else
-                      <path fill-rule="evenodd"
-                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                        clip-rule="evenodd" />
-                    @endif
-                  </svg>
-                @endif
-              </button>
+              Quantity
             </th>
             <th scope="col"
               class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
               Reason</th>
             <th scope="col"
-              class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider text-nowrap">
               Performed By</th>
             <th scope="col"
               class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -191,22 +172,33 @@
               <td class="px-6 py-4">
                 <div class="flex items-center">
                   <div class="flex-shrink-0 h-8 w-8">
-                    <img class="h-8 w-8 rounded object-cover" src='{{ asset("storage/{$history->product->primaryImage->url}") }}'
-                      alt="{{ $history->product->name }}">
+                    @if($history->product && $history->product->primaryImage)
+                      <img class="h-8 w-8 rounded object-cover"
+                        src='{{ asset("storage/{$history->product->primaryImage->url}") }}'
+                        alt="{{ $history->product->name }}">
+                    @else
+                      <div class="h-8 w-8 rounded bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                        <flux:icon name="photo" class="w-4 h-4 text-gray-400" />
+                      </div>
+                    @endif
                   </div>
                   <div class="ml-3">
-                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $history->product->name }}</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ $history->product->sku }}</div>
+                    <div class="text-sm font-medium text-gray-900 dark:text-white">
+                      {{ $history->product->name ?? 'Product Unavailable' }}
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                      {{ $history->product->sku ?? 'N/A' }}
+                    </div>
                   </div>
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm text-gray-900 dark:text-white">{{ $history->warehouse->name }}</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">{{ $history->warehouse->code ?? 'N/A' }}</div>
+                {{-- <div class="text-xs text-gray-500 dark:text-gray-400">{{ $history->warehouse->code ?? 'N/A' }}</div> --}}
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm font-medium text-gray-900 dark:text-white">
-                  {{ $history->type === 'in' ? '+' : '+' }}{{ number_format($history->quantity_change) }}
+                  {{ $history->type === 'in' ? '+' : '-' }}{{ number_format($history->quantity_change) }}
                 </div>
                 <div class="text-xs text-gray-500 dark:text-gray-400">units</div>
               </td>

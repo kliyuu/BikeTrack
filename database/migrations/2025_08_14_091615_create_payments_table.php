@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
@@ -17,6 +18,7 @@ return new class extends Migration {
             $table->string('method')->comment('Payment method, e.g., credit card, bank transfer, etc.');
             $table->string('status')->comment('Payment status, e.g., pending, completed, failed, etc.');
             $table->timestamp('paid_at')->nullable();
+            $table->string('proof_path')->nullable();
             $table->timestamps();
         });
     }

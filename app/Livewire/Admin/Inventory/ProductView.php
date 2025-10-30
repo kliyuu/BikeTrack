@@ -12,171 +12,175 @@ use Livewire\WithFileUploads;
 #[Title('Product')]
 class ProductView extends Component
 {
-  use WithFileUploads;
+    use WithFileUploads;
 
-  public $product;
-  public $productId;
-  public $newPrimaryImage;
-  public $newImage;
+    public $product;
 
-  public function mount($id)
-  {
-    $this->product = Product::with(['brand', 'category', 'inventoryLevels.warehouse', 'images'])
-      ->findOrFail($id);
-  }
+    public $productId;
 
-  public function updatedNewPrimaryImage()
-  {
-    $this->validate([
-      'newPrimaryImage' => 'required|image|mimes:jpeg,png,jpg|max:2048',
-    ]);
+    public $newPrimaryImage;
 
-    // Delete old image if it exists
-    if ($this->product->primaryImage && Storage::disk('public')->exists($this->product->primaryImage->url)) {
-      Storage::disk('public')->delete($this->product->primaryImage->url);
+    public $newImage;
+
+    public function mount($id)
+    {
+        $this->product = Product::with(['brand', 'category', 'inventoryLevels.warehouse', 'images'])
+            ->findOrFail($id);
     }
 
-    $path = $this->newPrimaryImage->store("products/{$this->product->id}", 'public');
+    public function updatedNewPrimaryImage()
+    {
+        $this->validate([
+            'newPrimaryImage' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
 
-    // Store new image
-    $this->product->primaryImage()->updateOrCreate(
-      ['is_primary' => true],
-      [
-        'product_id' => $this->product->id,
-        'url' => $path,
-        'alt_text' => $this->product->name,
-        'is_primary' => true,
-      ],
-    );
+        // Delete old image if it exists
+        if ($this->product->primaryImage && Storage::disk('public')->exists($this->product->primaryImage->url)) {
+            Storage::disk('public')->delete($this->product->primaryImage->url);
+        }
 
-    $this->product->refresh();
+        $path = $this->newPrimaryImage->store("products/{$this->product->id}", 'public');
 
-    // Success notification
-    $this->dispatch(
-      'notify',
-      variant: 'success',
-      title: 'Primary Image Updated',
-      message: 'The product image has been replaced successfully.'
-    );
-  }
+        // Store new image
+        $this->product->primaryImage()->updateOrCreate(
+            ['is_primary' => true],
+            [
+                'product_id' => $this->product->id,
+                'url' => $path,
+                'alt_text' => $this->product->name,
+                'is_primary' => true,
+            ],
+        );
 
-  public function updatedNewImage()
-  {
-    $this->validate([
-      'newImage' => 'required|image|mimes:jpeg,png,jpg|max:2048',
-    ]);
+        $this->product->refresh();
 
-    // Check if the product already has 4 images
-    if($this->product->secondaryImages()->count() >= 4) {
-      $this->dispatch(
-        'notify',
-        variant: 'error',
-        title: 'Image Limit Reached',
-        message: 'A product can have a maximum of 4 secondary images.'
-      );
-
-      $this->newImage = null;
-      return;
+        // Success notification
+        $this->dispatch(
+            'notify',
+            variant: 'success',
+            title: 'Primary Image Updated',
+            message: 'The product image has been replaced successfully.'
+        );
     }
 
-    $path = $this->newImage->store("products/{$this->product->id}", 'public');
+    public function updatedNewImage()
+    {
+        $this->validate([
+            'newImage' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
 
-    // Store new image
-    $this->product->images()->create([
-      'product_id' => $this->product->id,
-      'url' => $path,
-      'alt_text' => $this->product->name,
-      'is_primary' => false,
-    ]);
+        // Check if the product already has 4 images
+        if ($this->product->secondaryImages()->count() >= 4) {
+            $this->dispatch(
+                'notify',
+                variant: 'error',
+                title: 'Image Limit Reached',
+                message: 'A product can have a maximum of 4 secondary images.'
+            );
 
-    $this->product->refresh();
-    $this->newImage = null;
+            $this->newImage = null;
 
-    // Success notification
-    $this->dispatch(
-      'notify',
-      variant: 'success',
-      title: 'Image Added',
-      message: 'The product image has been added successfully.'
-    );
-  }
+            return;
+        }
 
-  public function deleteImage($imageId)
-  {
-    $this->validateImageId($imageId);
+        $path = $this->newImage->store("products/{$this->product->id}", 'public');
 
-    $image = $this->product->images()->findOrFail($imageId);
+        // Store new image
+        $this->product->images()->create([
+            'product_id' => $this->product->id,
+            'url' => $path,
+            'alt_text' => $this->product->name,
+            'is_primary' => false,
+        ]);
 
-    // Delete image file from storage
-    if (Storage::disk('public')->exists($image->url)) {
-      Storage::disk('public')->delete($image->url);
+        $this->product->refresh();
+        $this->newImage = null;
+
+        // Success notification
+        $this->dispatch(
+            'notify',
+            variant: 'success',
+            title: 'Image Added',
+            message: 'The product image has been added successfully.'
+        );
     }
 
-    // Delete image record from database
-    $image->delete();
+    public function deleteImage($imageId)
+    {
+        $this->validateImageId($imageId);
 
-    $this->product->refresh();
+        $image = $this->product->images()->findOrFail($imageId);
 
-    // Success notification
-    $this->dispatch(
-      'notify',
-      variant: 'success',
-      title: 'Image Deleted',
-      message: 'The product image has been deleted successfully.'
-    );
-  }
+        // Delete image file from storage
+        if (Storage::disk('public')->exists($image->url)) {
+            Storage::disk('public')->delete($image->url);
+        }
 
-  public function confirmForceDelete($id)
-  {
-    $this->validateOnlyId($id);
+        // Delete image record from database
+        $image->delete();
 
-    $this->productId = $id;
+        $this->product->refresh();
 
-    Flux::modal('confirm-force-delete')->show();
-  }
+        // Success notification
+        $this->dispatch(
+            'notify',
+            variant: 'success',
+            title: 'Image Deleted',
+            message: 'The product image has been deleted successfully.'
+        );
+    }
 
-  public function forceDeleteProduct()
-  {
-    $this->validate([
-      'productId' => 'required|exists:products,id',
-    ]);
+    public function confirmForceDelete($id)
+    {
+        $this->validateOnlyId($id);
 
-    Product::withTrashed()->findOrFail($this->productId)->forceDelete();
+        $this->productId = $id;
 
-    $this->reset(['productId']);
+        Flux::modal('confirm-force-delete')->show();
+    }
 
-    $this->dispatch(
-      'notify',
-      variant: 'success',
-      title: 'Product Permanently Deleted',
-      message: 'Product and its images have been removed.'
-    );
+    public function forceDeleteProduct()
+    {
+        $this->validate([
+            'productId' => 'required|exists:products,id',
+        ]);
 
-    $this->dispatch('productDeleted');
-    Flux::modal('confirm-force-delete')->close();
+        Product::withTrashed()->findOrFail($this->productId)->forceDelete();
 
-    // Redirect to the product manager page after deletion
-    return redirect()->route('admin.products');
-  }
+        $this->reset(['productId']);
 
-  protected function validateOnlyId($id)
-  {
-    validator(
-      ['id' => $id],
-      ['id' => 'required|exists:products,id']
-    )->validate();
-  }
+        $this->dispatch(
+            'notify',
+            variant: 'success',
+            title: 'Product Permanently Deleted',
+            message: 'Product and its images have been removed.'
+        );
 
-  public function validateImageId($id)
-  {
-    validator(
-      ['id' => $id],
-      ['id' => 'required|exists:product_images,id']
-    )->validate();
-  }
+        $this->dispatch('productDeleted');
+        Flux::modal('confirm-force-delete')->close();
 
-  public function render()
-  {
-    return view('livewire.admin.inventory.product-view');
-  }
+        // Redirect to the product manager page after deletion
+        return redirect()->route('admin.products');
+    }
+
+    protected function validateOnlyId($id)
+    {
+        validator(
+            ['id' => $id],
+            ['id' => 'required|exists:products,id']
+        )->validate();
+    }
+
+    public function validateImageId($id)
+    {
+        validator(
+            ['id' => $id],
+            ['id' => 'required|exists:product_images,id']
+        )->validate();
+    }
+
+    public function render()
+    {
+        return view('livewire.admin.inventory.product-view');
+    }
 }

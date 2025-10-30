@@ -16,189 +16,198 @@ use Livewire\WithPagination;
 #[Title('Stock Level')]
 class StockLevel extends Component
 {
-  use WithPagination;
+    use WithPagination;
 
-  protected ProductService $productService;
+    protected ProductService $productService;
 
-  public $search = '';
-  public $warehouseFilter = '';
-  public $stockFilter = 'all'; // all, low, out, in stock
-  public $sortField = 'products.name';
-  public $sortDirection = 'asc';
-  public $perPage = 10;
+    public $search = '';
 
-  public $stockId = null;
-  public $adjustedStock = null;
-  public $warehouseId = '';
-  public $quantity_change = '';
-  public $adjustmentReason = '';
+    public $warehouseFilter = '';
 
-  public function boot(ProductService $productService)
-  {
-    $this->productService = $productService;
-  }
+    public $stockFilter = 'all'; // all, low, out, in stock
 
-  public function updatingSearch()
-  {
-    $this->resetPage();
-  }
+    public $sortField = 'products.name';
 
-  public function updatingWarehouseFilter()
-  {
-    $this->resetPage();
-  }
+    public $sortDirection = 'asc';
 
-  public function updatingStockFilter()
-  {
-    $this->resetPage();
-  }
+    public $perPage = 10;
 
-  public function sortBy($field)
-  {
-    if ($this->sortField === $field) {
-      $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
-    } else {
-      $this->sortField = $field;
-      $this->sortDirection = 'asc';
+    public $stockId = null;
+
+    public $adjustedStock = null;
+
+    public $warehouseId = '';
+
+    public $quantity_change = '';
+
+    public $adjustmentReason = '';
+
+    public function boot(ProductService $productService)
+    {
+        $this->productService = $productService;
     }
 
-    $this->resetPage();
-  }
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
 
-  public function openAdjustmentModal($id = null)
-  {
-    $this->resetForm();
+    public function updatingWarehouseFilter()
+    {
+        $this->resetPage();
+    }
 
-    $this->validateIdOnly($id);
+    public function updatingStockFilter()
+    {
+        $this->resetPage();
+    }
 
-    $this->stockId = $id;
+    public function sortBy($field)
+    {
+        if ($this->sortField === $field) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortField = $field;
+            $this->sortDirection = 'asc';
+        }
 
-    $this->adjustedStock = Product::findOrFail($id);
+        $this->resetPage();
+    }
 
-    Flux::modal('adjustment-modal')->show();
-  }
+    public function openAdjustmentModal($id = null)
+    {
+        $this->resetForm();
 
-  public function saveStockAdjustment()
-  {
-    $this->validate([
-      'warehouseId' => 'required|exists:warehouses,id',
-      'quantity_change' => 'required|integer',
-      'adjustmentReason' => 'required|string',
-    ]);
+        $this->validateIdOnly($id);
 
-    $warehouseId = $this->warehouseId;
-    $quantityChange = (int) $this->quantity_change;
+        $this->stockId = $id;
 
-    $inventoryLevel = InventoryLevel::firstOrCreate(
-      [
-        'product_id' => $this->stockId,
-        'warehouse_id' => $warehouseId,
-      ],
-      ['quantity' => 0]
-    );
+        $this->adjustedStock = Product::findOrFail($id);
 
-    $quantityBefore = $inventoryLevel->quantity;
-    $quantityAfter = $quantityBefore + $quantityChange;
+        Flux::modal('adjustment-modal')->show();
+    }
 
-    $inventoryLevel->update([
-      'quantity' => max(0, $quantityAfter)
-    ]);
+    public function saveStockAdjustment()
+    {
+        $this->validate([
+            'warehouseId' => 'required|exists:warehouses,id',
+            'quantity_change' => 'required|integer',
+            'adjustmentReason' => 'required|string',
+        ]);
 
-    // Create a restock history entry
-    RestockHistory::create([
-      'product_id' => $this->stockId,
-      'warehouse_id' => $warehouseId,
-      'quantity_before' => $quantityBefore,
-      'quantity_after' => max(0, $quantityAfter),
-      'quantity_change' => $quantityChange,
-      'reason' => $this->adjustmentReason,
-      'performed_by' => Auth::id(),
-    ]);
+        $warehouseId = $this->warehouseId;
+        $quantityChange = (int) $this->quantity_change;
 
-    $this->productService->updateCachedStock($this->adjustedStock);
+        $inventoryLevel = InventoryLevel::firstOrCreate(
+            [
+                'product_id' => $this->stockId,
+                'warehouse_id' => $warehouseId,
+            ],
+            ['quantity' => 0]
+        );
 
-    $this->dispatch(
-      'notify',
-      variant: 'success',
-      title: 'Stock Adjusted',
-      message: 'Stock adjusted successfully.',
-    );
+        $quantityBefore = $inventoryLevel->quantity;
+        $quantityAfter = $quantityBefore + $quantityChange;
 
-    $this->closeModal();
-  }
+        $inventoryLevel->update([
+            'quantity' => max(0, $quantityAfter),
+        ]);
 
-  public function closeModal()
-  {
-    $this->resetForm();
-    Flux::modals()->close();
-  }
+        // Create a restock history entry
+        RestockHistory::create([
+            'product_id' => $this->stockId,
+            'warehouse_id' => $warehouseId,
+            'quantity_before' => $quantityBefore,
+            'quantity_after' => max(0, $quantityAfter),
+            'quantity_change' => $quantityChange,
+            'reason' => $this->adjustmentReason,
+            'performed_by' => Auth::id(),
+        ]);
 
-  public function getInventoryLevelsProperty()
-  {
-    $query = InventoryLevel::query()->with(['product.brand', 'product.category', 'warehouse'])
-      ->join('products', 'inventory_levels.product_id', '=', 'products.id')
-      ->join('warehouses', 'inventory_levels.warehouse_id', '=', 'warehouses.id')
-      ->select('inventory_levels.*')
-      ->search($this->search)
-      ->warehouseFilter($this->warehouseFilter)
-      ->stockFilter($this->stockFilter);
+        $this->productService->updateCachedStock($this->adjustedStock);
 
-    $query->orderBy($this->sortField, $this->sortDirection);
+        $this->dispatch(
+            'notify',
+            variant: 'success',
+            title: 'Stock Adjusted',
+            message: 'Stock adjusted successfully.',
+        );
 
-    return $query->paginate($this->perPage);
-  }
+        $this->closeModal();
+    }
 
-  public function getWarehousesProperty()
-  {
-    return Warehouse::orderBy('name')->get();
-  }
+    public function closeModal()
+    {
+        $this->resetForm();
+        Flux::modals()->close();
+    }
 
-  public function getStockSummaryProperty()
-  {
-    $totalProducts = InventoryLevel::distinct('product_id')->count();
-    $lowStock = InventoryLevel::query()
-      ->whereHas('product', function ($q) {
-        $q->whereColumn('inventory_levels.quantity', '<=', 'products.low_stock_threshold');
-      })
-      ->count();
+    public function getInventoryLevelsProperty()
+    {
+        $query = InventoryLevel::query()->with(['product.brand', 'product.category', 'warehouse'])
+            ->join('products', 'inventory_levels.product_id', '=', 'products.id')
+            ->join('warehouses', 'inventory_levels.warehouse_id', '=', 'warehouses.id')
+            ->select('inventory_levels.*')
+            ->search($this->search)
+            ->warehouseFilter($this->warehouseFilter)
+            ->stockFilter($this->stockFilter);
 
-    $inStock = InventoryLevel::where('quantity', '>', 0)->count();
-    $outOfStock = InventoryLevel::where('quantity', 0)->count();
+        $query->orderBy($this->sortField, $this->sortDirection);
 
-    return [
-      'total_products' => $totalProducts,
-      'low_stock' => $lowStock,
-      'in_stock' => $inStock,
-      'out_of_stock' => $outOfStock,
-    ];
-  }
+        return $query->paginate($this->perPage);
+    }
 
-  private function resetForm()
-  {
-    $this->reset([
-      'stockId',
-      'warehouseId',
-      'quantity_change',
-      'adjustmentReason'
-    ]);
+    public function getWarehousesProperty()
+    {
+        return Warehouse::orderBy('name')->get();
+    }
 
-    $this->resetValidation();
-  }
+    public function getStockSummaryProperty()
+    {
+        $totalProducts = InventoryLevel::distinct('product_id')->count();
+        $lowStock = InventoryLevel::query()
+            ->whereHas('product', function ($q) {
+                $q->whereColumn('inventory_levels.quantity', '<=', 'products.low_stock_threshold');
+            })
+            ->count();
 
-  private function validateIdOnly($id)
-  {
-    validator(
-      ['id' => $id],
-      ['id' => 'required|exists:inventory_levels,id']
-    )->validate();
-  }
+        $inStock = InventoryLevel::where('quantity', '>', 0)->count();
+        $outOfStock = InventoryLevel::where('quantity', 0)->count();
 
-  public function render()
-  {
-    return view('livewire.admin.inventory.stock-level', [
-      'inventoryLevels' => $this->inventoryLevels,
-      'warehouses' => $this->warehouses,
-      'stockSummary' => $this->stockSummary
-    ]);
-  }
+        return [
+            'total_products' => $totalProducts,
+            'low_stock' => $lowStock,
+            'in_stock' => $inStock,
+            'out_of_stock' => $outOfStock,
+        ];
+    }
+
+    private function resetForm()
+    {
+        $this->reset([
+            'stockId',
+            'warehouseId',
+            'quantity_change',
+            'adjustmentReason',
+        ]);
+
+        $this->resetValidation();
+    }
+
+    private function validateIdOnly($id)
+    {
+        validator(
+            ['id' => $id],
+            ['id' => 'required|exists:inventory_levels,id']
+        )->validate();
+    }
+
+    public function render()
+    {
+        return view('livewire.admin.inventory.stock-level', [
+            'inventoryLevels' => $this->inventoryLevels,
+            'warehouses' => $this->warehouses,
+            'stockSummary' => $this->stockSummary,
+        ]);
+    }
 }

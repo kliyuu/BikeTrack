@@ -7,6 +7,8 @@
     </div>
   </div>
 
+  {{-- @dump($products) --}}
+
   {{-- @if (session()->has('message'))
     <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 2000)" x-transition.opacity.duration.500ms
       class="bg-green-100 text-green-800 p-2 mb-3 rounded">
@@ -101,9 +103,9 @@
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 space-y-4">
         <div class="flex flex-col gap-2 lg:col-span-2">
           <flux:label>Search Products</flux:label>
-          <input type="text" wire:model.live.debounce.100ms="search" id="search"
+          <input type="text" wire:model.live.debounce.300ms="search" id="search"
             class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            placeholder="Search by SKU, name, or barcode...">
+            placeholder="Search by SKU or name...">
         </div>
         <div class="flex flex-col gap-2 md:ml-4">
           <flux:label>Brands</flux:label>
@@ -142,9 +144,9 @@
         <label for="barcodeSearch" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Barcode
           Scanner</label>
         <div class="flex">
-          <input wire:model.live="barcodeSearch" type="text" id="barcodeSearch"
-            placeholder="Scan or type barcode/SKU..."
-            class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-l-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500">
+          <input wire:model.live.debounce.300ms="search" type="text" id="barcodeSearch"
+            placeholder="Scan or type SKU..."
+            class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-l-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm">
           <button type="button"
             class="px-4 py-2 bg-gray-100 dark:bg-gray-600 border border-l-0 border-gray-300 dark:border-gray-600 rounded-r-md hover:bg-gray-200 dark:hover:bg-gray-500">
             <flux:icon name="qr-code" class="w-5 h-5 text-gray-600 dark:text-gray-300" />
@@ -157,7 +159,7 @@
   <x-card class="bg-white border border-gray-100 shadow-sm rounded-md">
     <div class="card-body">
       <div class="flex items-center justify-between mb-6 border-b border-gray-200 pb-4">
-        <h2 class="text-base">{{ __('Products') }}</h2>
+        <h2 class="text-base">{{ __('Products') }} ({{ $stockSummary['total_products'] }})</h2>
         <flux:button size="sm" variant="primary" icon="plus" wire:click="openProductModal"
           :loading="false" class="!px-4 bg-blue-600 hover:bg-blue-700 dark:text-white">
           {{ __('Add Product') }}
@@ -170,7 +172,7 @@
             <tr>
               <th scope="col"
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                <button wire:click="sortBy('name')"
+                <button type="button" wire:click="sortBy('name')"
                   class="flex items-center hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer">
                   PRODUCT
                   @if ($sortField === 'name')
@@ -179,12 +181,14 @@
                     @else
                       <flux:icon name="chevron-down" class="ml-1 w-3 h-3" />
                     @endif
+                  @else
+                    <flux:icon name="chevron-up-down" class="ml-1 size-4" />
                   @endif
                 </button>
               </th>
               <th scope="col"
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                <button wire:click="sortBy('sku')"
+                <button type="button" wire:click="sortBy('sku')"
                   class="flex items-center hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer">
                   SKU
                   @if ($sortField === 'sku')
@@ -193,12 +197,27 @@
                     @else
                       <flux:icon name="chevron-down" class="ml-1 w-3 h-3" />
                     @endif
+                  @else
+                    <flux:icon name="chevron-up-down" class="ml-1 size-4" />
                   @endif
                 </button>
               </th>
               <th scope="col"
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Category</th>
+                <button type="button" wire:click="sortBy('category.name')"
+                  class="flex items-center hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer">
+                  CATEGORY
+                  @if ($sortField === 'category.name')
+                    @if ($sortDirection === 'asc')
+                      <flux:icon name="chevron-up" class="ml-1 w-3 h-3" />
+                    @else
+                      <flux:icon name="chevron-down" class="ml-1 w-3 h-3" />
+                    @endif
+                  @else
+                    <flux:icon name="chevron-up-down" class="ml-1 size-4" />
+                  @endif
+                </button>
+              </th>
               <th scope="col"
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 <button type="button" wire:click="sortBy('unit_price')"
@@ -210,15 +229,31 @@
                     @else
                       <flux:icon name="chevron-down" class="ml-1 w-3 h-3" />
                     @endif
+                  @else
+                    <flux:icon name="chevron-up-down" class="ml-1 size-4" />
                   @endif
                 </button>
               </th>
               <th scope="col"
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Stock</th>
-              <th scope="col"
+                <button type="button" wire:click="sortBy('cached_stock')"
+                  class="flex items-center hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer">
+                  TOTAL STOCK
+                  @if ($sortField === 'cached_stock')
+                    @if ($sortDirection === 'asc')
+                      <flux:icon name="chevron-up" class="ml-1 w-3 h-3" />
+                    @else
+                      <flux:icon name="chevron-down" class="ml-1 w-3 h-3" />
+                    @endif
+                  @else
+                    <flux:icon name="chevron-up-down" class="ml-1 size-4" />
+                  @endif
+                </button>
+              </th>
+              {{-- <th scope="col"
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Warehouses</th>
+                By Warehouse
+              </th> --}}
               <th scope="col"
                 class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Status
@@ -229,6 +264,7 @@
               </th>
             </tr>
           </thead>
+
           <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             @forelse($products as $product)
               <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
@@ -239,11 +275,11 @@
                         <img class="h-10 w-10 rounded-lg object-cover"
                           src="{{ asset("storage/{$product->primaryImage->url}") }}" alt="{{ $product->name }}">
                       @elseif ($product->primaryImage && !Storage::disk('public')->exists($product->primaryImage->url))
-                        <img class="h-10 w-10 rounded-lg object-cover"
-                          src="{{ $product->primaryImage->url }}" alt="{{ $product->name }}">
+                        <img class="h-10 w-10 rounded-lg object-cover" src="{{ $product->primaryImage->url }}"
+                          alt="{{ $product->name }}">
                       @else
-                        <img class="h-10 w-10 rounded-lg object-cover"
-                          src="{{ asset('images/no-image.svg') }}" alt="{{ $product->name }}">
+                        <img class="h-10 w-10 rounded-lg object-cover" src="{{ asset('images/no-image.svg') }}"
+                          alt="{{ $product->name }}">
                       @endif
                     </div>
                     <div class="ml-4">
@@ -263,36 +299,86 @@
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="text-sm text-gray-900 dark:text-white font-medium">
-                    ₱{{ number_format($product->unit_price, 2) }}</div>
+                    ₱{{ number_format($product->unit_price, 2) }}
+                  </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   @php
+                    $totalStock = $product->variants->sum('cached_stock');
+                    $hasLowStock =
+                        $product->variants
+                            ->filter(function ($variant) {
+                                return $variant->cached_stock > 0 &&
+                                    $variant->cached_stock <= $variant->low_stock_threshold;
+                            })
+                            ->count() > 0;
                     $stockClass = match (true) {
-                        $product->cached_stock <= 0 => 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-200',
-                        $product->cached_stock <= $product->low_stock_threshold
-                            => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200',
+                        $totalStock <= 0 => 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-200',
+                        $hasLowStock => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200',
                         default => 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-200',
                     };
                   @endphp
                   <span class="inline-flex px-2 py-1 text-xs rounded-full {{ $stockClass }}">
-                    {{ $product->cached_stock }} units
+                    {{ $totalStock }} units
                   </span>
+                  @if ($product->variants->count() > 1)
+                    <div class="text-xs text-gray-500 mt-1">{{ $product->variants->count() }} variants</div>
+                  @endif
                 </td>
-                <td class="px-6 py-4">
+                {{-- <td class="px-6 py-4">
                   <div class="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-                    @foreach ($product->inventoryLevels as $level)
-                      <div>{{ $level->warehouse->name }}: {{ $level->quantity }}</div>
+                    @php
+                      $warehouseStocks = [];
+                      foreach ($product->variants as $variant) {
+                        foreach ($variant->inventoryLevels as $level) {
+                          $warehouseName = $level->warehouse->name;
+                          if (!isset($warehouseStocks[$warehouseName])) {
+                            $warehouseStocks[$warehouseName] = 0;
+                          }
+                          $warehouseStocks[$warehouseName] += ($level->quantity - $level->reserved_quantity);
+                        }
+                      }
+                    @endphp
+                    @foreach ($warehouseStocks as $warehouseName => $stock)
+                      <div>{{ $warehouseName }}: {{ $stock }}</div>
                     @endforeach
                   </div>
-                </td>
+                </td> --}}
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <span
-                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $product->is_active ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-200' }}">
+                  {{-- <span
+                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $product->is_active ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-200' }}"> --}}
+                  <flux:badge size="sm" color="{{ $product->is_active ? 'green' : 'red' }}">
                     {{ $product->is_active ? 'Active' : 'Inactive' }}
-                  </span>
+                  </flux:badge>
+                  {{-- </span> --}}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-1">
-                  <flux:tooltip content="View">
+                  <flux:dropdown>
+                    <flux:button size="xs" variant="primary" icon="ellipsis-vertical" icon:variant="outline"
+                      class="text-gray-600 bg-gray-100 hover:bg-gray-200 border-0 cursor-pointer" />
+
+                    <flux:navmenu>
+                      <flux:navmenu.item icon="eye" href="{{ route('admin.products.show', $product->id) }}">
+                        View
+                      </flux:navmenu.item>
+                      <flux:navmenu.item icon="pencil-square" wire:click="openProductModal({{ $product->id }})"
+                        class="cursor-pointer">
+                        Edit
+                      </flux:navmenu.item>
+                      <flux:navmenu.item icon="squares-plus"
+                        href="{{ route('admin.products.variants', $product->id) }}" class="cursor-pointer">
+                        Variants ({{ $product->variants->count() }})
+                      </flux:navmenu.item>
+                      {{-- <flux:navmenu.item icon="plus-circle" wire:click="openStockModal({{ $product->id }})" class="cursor-pointer">
+                        Stock
+                      </flux:navmenu.item> --}}
+                      <flux:navmenu.item variant="danger" icon="trash"
+                        wire:click="confirmDelete({{ $product->id }})" class="cursor-pointer">
+                        Delete
+                      </flux:navmenu.item>
+                    </flux:navmenu>
+                  </flux:dropdown>
+                  {{-- <flux:tooltip content="View">
                     <flux:button href="{{ route('admin.products.show', $product->id) }}" size="xs"
                       variant="primary" icon="eye" icon:variant="outline"
                       class="text-orange-600 bg-orange-100 hover:bg-orange-200 border-0 cursor-pointer"></flux:button>
@@ -311,7 +397,7 @@
                     <flux:button wire:click="confirmDelete({{ $product->id }})" size="xs" variant="primary"
                       icon="trash" icon:variant="outline"
                       class="text-red-600 bg-red-100 hover:bg-red-200 border-0 cursor-pointer" />
-                  </flux:tooltip>
+                  </flux:tooltip> --}}
                 </td>
               </tr>
             @empty
@@ -338,6 +424,15 @@
         @endif
       </div>
     </div>
+
+    @if ($item)
+      <div class="p-4 bg-gray-100 rounded shadow">
+        <h2 class="text-lg font-bold">{{ $item->name }} ({{ $item->sku }})</h2>
+        <p><strong>Floor:</strong> {{ $item->location->floor ?? 'N/A' }}</p>
+        <p><strong>Aisle:</strong> {{ $item->location->aisle ?? 'N/A' }}</p>
+        <p><strong>Shelf:</strong> {{ $item->location->shelf ?? 'N/A' }}</p>
+      </div>
+    @endif
   </x-card>
 
   {{-- Toasts --}}
@@ -345,6 +440,6 @@
 
   {{-- Modals --}}
   @include('partials.product.product-modal')
-  @include('partials.product.restock-product')
+  {{-- @include('partials.product.restock-product') --}}
   @include('partials.product.delete-product')
 </div>

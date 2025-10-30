@@ -8,21 +8,21 @@ use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-  /**
-   * Seed the application's database.
-   */
-  public function run(): void
-  {
-    // User::factory(10)->create();
+    /**
+     * Seed the application's database.
+     */
+    public function run(): void
+    {
+        // User::factory(10)->create();
 
-    $this->call([
-      RoleSeeder::class,
-      UserSeeder::class,
-      BrandSeeder::class,
-      CategorySeeder::class,
-      WarehouseSeeder::class,
-      InventorySeeder::class,
-      ClientSeeder::class,
-    ]);
-  }
+        $this->call([
+            RoleSeeder::class,
+            UserSeeder::class,
+            BrandSeeder::class,
+            CategorySeeder::class,
+            WarehouseSeeder::class,
+            InventorySeeder::class,
+            ClientSeeder::class,
+        ]);
+    }
 }

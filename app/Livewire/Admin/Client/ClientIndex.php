@@ -3,7 +3,6 @@
 namespace App\Livewire\Admin\Client;
 
 use App\Models\Client;
-use App\Models\User;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -12,88 +11,98 @@ use Livewire\WithPagination;
 #[Title('Clients')]
 class ClientIndex extends Component
 {
-  use WithPagination;
+    use WithPagination;
 
-  public $search = '';
-  public $clientFilter = '';
-  public $sortField = 'contact_name';
-  public $sortDirection = 'asc';
+    public $search = '';
 
-  public $showModal = false;
+    public $clientFilter = '';
 
-  // protected $listeners = ['clientSaved' => '$refresh'];
+    public $sortField = 'company_name';
 
-  public function updatingSearch()
-  {
-    $this->resetPage();
-  }
+    public $sortDirection = 'asc';
 
-  public function updatingClientFilter()
-  {
-    $this->resetPage();
-  }
+    public $showModal = false;
 
-  public function sortBy($field)
-  {
-    if ($this->sortField === $field) {
-      $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
-    } else {
-      $this->sortField = $field;
-      $this->sortDirection = 'asc';
+    // protected $listeners = ['clientSaved' => '$refresh'];
+
+    public function updatingSearch()
+    {
+        $this->resetPage();
     }
 
-    $this->resetPage();
-  }
-
-  public function getClientsProperty()
-  {
-    $query = Client::query()->with(['user', 'orders']);
-
-    if ($this->search) {
-      $query->where('company_name', 'like', "%{$this->search}%")
-        ->orWhere('contact_name', 'like', "%{$this->search}%")
-        ->orWhere('contact_email', 'like', "%{$this->search}%");
+    public function updatingClientFilter()
+    {
+        $this->resetPage();
     }
 
-    if ($this->clientFilter) {
-      $query->where('status', $this->clientFilter);
+    public function sortBy($field)
+    {
+        if ($this->sortField === $field) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortField = $field;
+            $this->sortDirection = 'asc';
+        }
+
+        $this->resetPage();
     }
 
-    return $query->orderBy($this->sortField, $this->sortDirection)
-      ->paginate(10);
-  }
+    public function getClientsProperty()
+    {
+        $query = Client::query()->with(['user', 'orders']);
 
-  public function approve($clientId)
-  {
-    $client = Client::with('user')->findOrFail($clientId);
-    $client->update(['status' => 'active']);
-    $client->user->update(['approval_status' => 'active']);
+        if ($this->search) {
+            $query->where('company_name', 'like', "%{$this->search}%")
+                ->orWhere('contact_name', 'like', "%{$this->search}%")
+                ->orWhere('contact_email', 'like', "%{$this->search}%");
+        }
 
-    Session::flash('message', 'Client approved successfully.');
-  }
+        if ($this->clientFilter) {
+            $query->where('status', $this->clientFilter);
+        }
 
-  public function reject($clientId)
-  {
-    $client = Client::with('user')->findOrFail($clientId);
-    $client->update(['status' => 'rejected']);
-    $client->user->update(['approval_status' => 'rejected']);
+        return $query->orderBy($this->sortField, $this->sortDirection)
+            ->paginate(10);
+    }
 
-    Session::flash('message', 'Client rejected.');
-  }
+    public function approve($clientId)
+    {
+        $client = Client::with('user')->findOrFail($clientId);
+        $client->update(['status' => 'active']);
+        $client->user->update(['approval_status' => 'active']);
 
-  public function delete($clientId)
-  {
-    $client = Client::with('user')->findOrFail($clientId);
-    $client->delete();
-    $client->user->delete();
+        Session::flash('message', 'Client approved successfully.');
+    }
 
-    Session::flash('message', 'Client deleted successfully.');
-  }
+    public function reject($clientId)
+    {
+        $client = Client::with('user')->findOrFail($clientId);
+        $client->update(['status' => 'rejected']);
+        $client->user->update(['approval_status' => 'rejected']);
 
-  public function render()
-  {
-    return view('livewire.admin.client.client-index', [
-      'clients' => $this->clients
-    ]);
-  }
+        Session::flash('message', 'Client rejected.');
+    }
+
+    public function delete($clientId)
+    {
+        $client = Client::with('user')->findOrFail($clientId);
+        $client->delete();
+        $client->user->delete();
+
+        Session::flash('message', 'Client deleted successfully.');
+
+        $this->dispatch(
+            'notify',
+            variant: 'success',
+            title: 'Success',
+            message: 'Client deleted successfully.'
+        );
+    }
+
+    public function render()
+    {
+        return view('livewire.admin.client.client-index', [
+            'clients' => $this->clients,
+        ]);
+    }
 }

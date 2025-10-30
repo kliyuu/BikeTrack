@@ -1,7 +1,7 @@
 <div>
   <main class="mx-auto max-w-7xl">
     <div class="flex items-baseline justify-between border-b border-gray-200 py-6">
-      <h1 class="text-4xl font-bold tracking-tight text-gray-900">Product Catalog</h1>
+      <h1 class="text-4xl font-bold tracking-tight text-gray-900 dark:text-white">Product Catalog</h1>
 
       <div class="flex items-center">
         <flux:dropdown align="end">
@@ -55,13 +55,14 @@
             </flux:fieldset>
           </div>
 
-          <div class="divide-y divide-outline overflow-hidden text-black border-b border-gray-200 mr-6">
+          <div class="divide-y divide-outline overflow-hidden text-black border-b border-gray-200 mr-6 dark:text-white">
+            {{-- Brand Filter --}}
             <div x-data="{ isExpanded: false }">
               <button id="controlsAccordionItemOne" type="button"
-                class="flex w-full items-center justify-between gap-4 bg-surface-alt py-4 pr-4 text-left text-base font-medium underline-offset-2 hover:bg-surface-alt/75 focus-visible:bg-surface-alt/75 focus-visible:underline focus-visible:outline-hidden dark:bg-surface-dark-alt dark:hover:bg-surface-dark-alt/75 dark:focus-visible:bg-surface-dark-alt/75 cursor-pointer"
+                class="flex w-full items-center justify-between gap-4 py-4 pr-4 text-left text-base font-medium underline-offset-2 hover:bg-surface-alt/75 focus-visible:bg-surface-alt/75 focus-visible:underline focus-visible:outline-hidden dark:hover:bg-surface-dark-alt/75 cursor-pointer"
                 aria-controls="accordionItemOne" x-on:click="isExpanded = ! isExpanded"
                 x-bind:class="isExpanded ? 'text-on-surface-strong dark:text-on-surface-dark-strong font-medium' :
-                    'text-black'"
+                    'text-black dark:text-white'"
                 x-bind:aria-expanded="isExpanded ? 'true' : 'false'">
                 Brand
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-width="2"
@@ -93,30 +94,69 @@
                 class="group flex rounded-radius max-w-sm flex-col overflow-hidden border border-outline bg-surface-alt text-on-surface dark:border-outline-dark dark:bg-surface-dark-alt dark:text-on-surface-dark">
                 <!-- Image -->
                 <div class="h-32 md:h-48 overflow-hidden">
-                  <img src="{{ asset("storage/{$product->primaryImage->url}") }}"
-                    class="object-cover transition duration-700 ease-out group-hover:scale-105"
-                    alt="{{ $product->name }}" />
+                  @if ($product->primaryImage && $product->primaryImage->url)
+                    <img src="{{ asset("storage/{$product->primaryImage->url}") }}"
+                      class="object-cover transition duration-700 ease-out group-hover:scale-105"
+                      alt="{{ $product->name }}" />
+                  @else
+                    <img src="{{ asset('images/no-image.svg') }}"
+                      class="object-cover transition duration-700 ease-out group-hover:scale-105"
+                      alt="{{ $product->name }}" />
+                  @endif
                 </div>
                 <!-- Content -->
-                <div class="flex flex-col gap-4 p-6">
-                  <!-- Header -->
-                  <div class="flex flex-col md:flex-row gap-4 md:gap-12 justify-between">
-                    <!-- Title & Rating -->
-                    <div class="flex flex-col">
-                      <span class="text-sm">
-                        <span class="sr-only">Price</span>₱{{ number_format($product->unit_price, 2) }}
-                      </span>
-                      <h3 class="text-lg font-bold text-on-surface-strong dark:text-on-surface-dark-strong"
-                        aria-describedby="productDescription">{{ $product->name }}</h3>
+                <div class="flex flex-col justify-between p-6 flex-grow">
+                  <div class="flex flex-col gap-5">
+                    <!-- Header -->
+                    <div class="flex flex-col md:flex-row gap-4 md:gap-12 justify-between">
+                      <!-- Title & Rating -->
+                      <div class="flex flex-col">
+                        <span class="text-sm">
+                          <span class="sr-only">Price</span>₱{{ number_format($product->unit_price, 2) }}
+                        </span>
+                        <h3 class="text-lg font-bold text-on-surface-strong dark:text-on-surface-dark-strong"
+                          aria-describedby="productDescription">{{ $product->name }}</h3>
+                      </div>
                     </div>
+                    <p id="productDescription" class="mb-2 text-pretty text-sm">
+                      {{ Str::limit($product->description, 80) }}
+                    </p>
+
+                    <!-- Variants indicator -->
+                    @if ($product->variants->count() > 0)
+                      <div class="flex items-center gap-2 mb-2">
+                        <div class="flex flex-col flex-wrap gap-1 w-full">
+                          @foreach ($product->variants->take(2) as $variant)
+                            <div class="flex justify-between">
+                              <span
+                                class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-300">
+                                {{ Str::limit($variant->getDisplayName(), 25) }}
+                              </span>
+                              <span
+                                class="text-xs font-medium px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-300">
+                                {{ $variant->cached_stock }}
+                              </span>
+                            </div>
+                          @endforeach
+
+                          @php
+                            $remainingCount = $product->variants->count() - 2;
+                          @endphp
+
+                          @if ($remainingCount > 0)
+                            <flux:badge variant="pill" size="sm" class="w-fit">
+                              +{{ $remainingCount }} {{ Str::plural('more variant', $remainingCount) }}
+                            </flux:badge>
+                          @endif
+                        </div>
+                      </div>
+                    @endif
                   </div>
-                  <p id="productDescription" class="mb-2 text-pretty text-sm">
-                    {{ Str::limit($product->description, 80) }}
-                  </p>
+
                   <!-- Button -->
-                  <flux:button variant="primary" icon="eye" class="cursor-pointer"
+                  <flux:button variant="primary" icon="shopping-cart" class="cursor-pointer"
                     href="{{ route('shop.product', $product->id) }}">
-                    View Details
+                    Add to Cart
                   </flux:button>
                 </div>
               </article>

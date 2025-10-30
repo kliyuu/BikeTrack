@@ -15,90 +15,98 @@ use Livewire\WithPagination;
 #[Title('Product Catalog')]
 class ProductCatalog extends Component
 {
-  use WithPagination;
+    use WithPagination;
 
-  public $search = '';
-  public $sortField = 'name';
-  public $sortDirection = 'asc';
-  public $perPage = 15;
+    public $search = '';
 
-  #[Url(as: 'category', except: '')]
-  public $categoryFilter = '';
-  public $brandFilter = [];
-  public $priceMinFilter = '';
-  public $priceMaxFilter = '';
+    public $sortField = 'name';
 
-  public function updatingSearch()
-  {
-    $this->resetPage();
-  }
+    public $sortDirection = 'asc';
 
-  public function updatingCategoryFilter()
-  {
-    $this->resetPage();
-  }
+    public $perPage = 15;
 
-  public function updatingBrandFilter()
-  {
-    $this->resetPage();
-  }
+    #[Url(as: 'category', except: '')]
+    public $categoryFilter = '';
 
-  public function updatingSortField()
-  {
-    $this->resetPage();
-  }
+    public $brandFilter = [];
 
-  public function getProductsProperty()
-  {
-    $query = Product::query()
-      ->active()
-      ->with(['category', 'brand', 'primaryImage']);
+    public $priceMinFilter = '';
 
-    if ($this->categoryFilter) {
-      $query->where('category_id', $this->categoryFilter);
+    public $priceMaxFilter = '';
+
+    public function updatingSearch()
+    {
+        $this->resetPage();
     }
 
-    if (!empty($this->brandFilter)) {
-      $query->whereIn('brand_id', $this->brandFilter);
+    public function updatingCategoryFilter()
+    {
+        $this->resetPage();
     }
 
-    switch ($this->sortField) {
-      case 'newest':
-        $query->orderBy('created_at', 'desc');
-        break;
-      case 'price_asc':
-        $query->orderBy('unit_price', 'asc');
-        break;
-      case 'price_desc':
-        $query->orderBy('unit_price', 'desc');
-        break;
-      case 'name':
-      default:
-        $query->orderBy($this->sortField, $this->sortDirection);
-        break;
+    public function updatingBrandFilter()
+    {
+        $this->resetPage();
     }
 
-    // $query->orderBy($this->sortField, $this->sortDirection);
+    public function updatingSortField()
+    {
+        $this->resetPage();
+    }
 
-    return $query->paginate($this->perPage);
-  }
+    public function getProductsProperty()
+    {
+        $query = Product::query()
+            ->active()
+            ->with(['category', 'brand', 'primaryImage', 'variants' => function ($query) {
+                $query->active()->orderBy('variant_name');
+            }]);
 
-  public function getCategoriesProperty()
-  {
-    return Category::query()->orderBy('name')->get();
-  }
+        if ($this->categoryFilter) {
+            $query->where('category_id', $this->categoryFilter);
+        }
 
-  public function getBrandsProperty()
-  {
-    return Brand::query()->orderBy('name')->get();
-  }
+        if (! empty($this->brandFilter)) {
+            $query->whereIn('brand_id', $this->brandFilter);
+        }
 
-  public function render()
-  {
-    return view('livewire.shop.product-catalog', [
-      'products' => $this->products,
-      'categories' => $this->categories,
-      'brands' => $this->brands,
-    ]);
-  }
+        switch ($this->sortField) {
+            case 'newest':
+                $query->orderBy('created_at', 'desc');
+                break;
+            case 'price_asc':
+                $query->orderBy('unit_price', 'asc');
+                break;
+            case 'price_desc':
+                $query->orderBy('unit_price', 'desc');
+                break;
+            case 'name':
+            default:
+                $query->orderBy($this->sortField, $this->sortDirection);
+                break;
+        }
+
+        // $query->orderBy($this->sortField, $this->sortDirection);
+
+        return $query->paginate($this->perPage);
+    }
+
+    public function getCategoriesProperty()
+    {
+        return Category::query()->orderBy('name')->get();
+    }
+
+    public function getBrandsProperty()
+    {
+        return Brand::query()->orderBy('name')->get();
+    }
+
+    public function render()
+    {
+        return view('livewire.shop.product-catalog', [
+            'products' => $this->products,
+            'categories' => $this->categories,
+            'brands' => $this->brands,
+        ]);
+    }
 }

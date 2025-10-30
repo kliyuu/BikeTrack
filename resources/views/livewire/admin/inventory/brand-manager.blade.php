@@ -34,18 +34,16 @@
               <th scope="col"
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 <button wire:click="sortBy('name')"
-                  class="flex items-center space-x-1 hover:text-gray-700 dark:hover:text-gray-100">
-                  <span>Name</span>
+                  class="flex items-center space-x-1 hover:text-gray-700 dark:hover:text-gray-100 cursor-pointer">
+                  <span class="uppercase">Name</span>
                   @if ($sortField === 'name')
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      @if ($sortDirection === 'asc')
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7">
-                        </path>
-                      @else
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
-                        </path>
-                      @endif
-                    </svg>
+                    @if ($sortDirection === 'asc')
+                      <flux:icon name="chevron-up" class="ml-1 w-3 h-3" />
+                    @else
+                      <flux:icon name="chevron-down" class="ml-1 w-3 h-3" />
+                    @endif
+                  @else
+                    <flux:icon name="chevron-up-down" class="ml-1 size-4" />
                   @endif
                 </button>
               </th>
@@ -56,36 +54,32 @@
               <th scope="col"
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 <button wire:click="sortBy('products_count')"
-                  class="flex items-center space-x-1 hover:text-gray-700 dark:hover:text-gray-100">
-                  <span>Products</span>
+                  class="flex items-center space-x-1 hover:text-gray-700 dark:hover:text-gray-100 cursor-pointer">
+                  <span class="uppercase">Products</span>
                   @if ($sortField === 'products_count')
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      @if ($sortDirection === 'asc')
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7">
-                        </path>
-                      @else
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
-                        </path>
-                      @endif
-                    </svg>
+                    @if ($sortDirection === 'asc')
+                      <flux:icon name="chevron-up" class="ml-1 w-3 h-3" />
+                    @else
+                      <flux:icon name="chevron-down" class="ml-1 w-3 h-3" />
+                    @endif
+                  @else
+                    <flux:icon name="chevron-up-down" class="ml-1 size-4" />
                   @endif
                 </button>
               </th>
               <th scope="col"
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 <button wire:click="sortBy('created_at')"
-                  class="flex items-center space-x-1 hover:text-gray-700 dark:hover:text-gray-100">
-                  <span>Created</span>
+                  class="flex items-center space-x-1 hover:text-gray-700 dark:hover:text-gray-100 cursor-pointer">
+                  <span class="uppercase">Created</span>
                   @if ($sortField === 'created_at')
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      @if ($sortDirection === 'asc')
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7">
-                        </path>
-                      @else
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
-                        </path>
-                      @endif
-                    </svg>
+                    @if ($sortDirection === 'asc')
+                      <flux:icon name="chevron-up" class="ml-1 w-3 h-3" />
+                    @else
+                      <flux:icon name="chevron-down" class="ml-1 w-3 h-3" />
+                    @endif
+                  @else
+                    <flux:icon name="chevron-up-down" class="ml-1 size-4" />
                   @endif
                 </button>
               </th>

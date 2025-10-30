@@ -5,8 +5,8 @@
     <div class="card-body">
       <div class="flex items-center justify-between mb-6 border-b border-gray-200 pb-4">
         <h2 class="text-base">{{ __('User Management') }}</h2>
-        <flux:button size="sm" variant="primary" icon="plus" :loading="false"
-          class="!px-4 bg-blue-600 hover:bg-blue-700 dark:text-white">
+        <flux:button wire:click="openUserModal" size="sm" variant="primary" color="blue" icon="plus"
+          :loading="false" class="cursor-pointer">
           {{ __('Add User') }}
         </flux:button>
       </div>
@@ -49,22 +49,23 @@
                   </td>
                   <td class="p-4">{{ ucfirst($user->role->name) ?? 'N/A' }}</td>
                   <td class="p-4">
-                    <span
-                      class="inline-flex overflow-hidden rounded-radius px-1 py-0.5 text-xs font-medium border-success text-success bg-success/10">
+                    <flux:badge size="sm" color="{{ $this->getStatusBadgeColor($user->approval_status) }}">
                       {{ ucfirst($user->approval_status) }}
-                    </span>
+                    </flux:badge>
                   </td>
                   <td class="p-4 text-center space-x-1">
-                    <flux:tooltip content="View">
+                    {{-- <flux:tooltip content="View">
                       <flux:button size="xs" variant="primary" icon="eye" icon:variant="outline"
                         class="text-blue-600 bg-blue-100 hover:bg-blue-200 border-0 cursor-pointer" />
-                    </flux:tooltip>
+                    </flux:tooltip> --}}
                     <flux:tooltip content="Edit">
-                      <flux:button size="xs" variant="primary" icon="pencil-square" icon:variant="outline"
+                      <flux:button wire:click="openUserModal({{ $user->id }})" size="xs" variant="primary"
+                        icon="pencil-square" icon:variant="outline"
                         class="text-green-600 bg-green-100 hover:bg-green-200 border-0 cursor-pointer" />
                     </flux:tooltip>
                     <flux:tooltip content="Delete">
-                      <flux:button size="xs" variant="primary" icon="trash" icon:variant="outline"
+                      <flux:button wire:click="confirmDelete({{ $user->id }})" size="xs" variant="primary"
+                        icon="trash" icon:variant="outline"
                         class="text-red-600 bg-red-100 hover:bg-red-200 border-0 cursor-pointer" />
                     </flux:tooltip>
                   </td>
@@ -87,5 +88,71 @@
     </div>
   </x-card>
 
+  {{-- Toast Notifications --}}
   <x-toast soundEffect="true" displayDuration="3000" />
+
+  <flux:modal name="user-modal" class="md:w-1/2">
+    <div class="space-y-6">
+      <div>
+        <flux:heading size="lg">{{ $userId ? 'Update User' : 'Add New User' }}</flux:heading>
+        <flux:text class="mt-2">Make changes to your personal details.</flux:text>
+      </div>
+
+      <form method="POST" wire:submit.prevent="saveUser">
+        <div class="space-y-4">
+          <flux:input wire:model="name" label="Name" placeholder="Enter name" />
+          <flux:input wire:model="email" label="Email" type="email" placeholder="Enter email" />
+          <flux:select wire:model="role_id" label="Role">
+            <flux:select.option value="" selected disabled>Select Role</flux:select.option>
+            <flux:select.option value="1">Admin</flux:select.option>
+            <flux:select.option value="2">Staff</flux:select.option>
+          </flux:select>
+          <flux:input wire:model="password" label="Password" type="password" placeholder="Enter password" viewable/>
+          <flux:input wire:model="password_confirmation" label="Confirm Password" type="password"
+            placeholder="Confirm password" viewable/>
+
+          @if ($userId)
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <flux:radio.group wire:model="approval_status" label="Status" variant="segmented">
+                <flux:radio value="active" label="Active" class="cursor-pointer" />
+                <flux:radio value="inactive" label="Inactive" class="cursor-pointer" />
+              </flux:radio.group>
+            </div>
+          @endif
+
+          <div class="flex">
+            <flux:spacer />
+            <flux:button type="button" variant="ghost" wire:click="closeModal" class="mr-2 cursor-pointer">
+              Cancel
+            </flux:button>
+            <flux:button type="submit" variant="primary" color="blue" class="cursor-pointer">
+              {{ $userId ? 'Update User' : 'Save User' }}
+            </flux:button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </flux:modal>
+
+  {{-- Delete User Modal --}}
+  <flux:modal name="delete-user" class="min-w-[22rem]">
+    <div class="space-y-6">
+      <div>
+        <flux:heading size="lg">Delete User</flux:heading>
+        <flux:text class="mt-2">
+          Are you sure you want to delete the user named <span class="font-semibold">{{ $user->name }}</span>?
+        </flux:text>
+      </div>
+
+      <div class="flex">
+        <flux:spacer />
+        <flux:button type="button" variant="ghost" wire:click="closeModal" class="mr-2 cursor-pointer">
+          Cancel
+        </flux:button>
+        <flux:button type="button" variant="danger" wire:click="deleteUser" class="cursor-pointer">
+          Delete User
+        </flux:button>
+      </div>
+    </div>
+  </flux:modal>
 </div>

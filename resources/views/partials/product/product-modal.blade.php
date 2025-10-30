@@ -38,28 +38,41 @@
         </flux:select>
       </div>
       <div class="grid grid-cols-2 gap-4">
-        <flux:input wire:model="unit_price" label="Price *" placeholder="Product price" type="number" />
-        <flux:input wire:model="cached_stock" label="Available Stock" placeholder="Product stock" variant="filled" readonly />
-      </div>
-
-      <div class="grid grid-cols-2 gap-4">
-        <flux:input wire:model="low_stock_threshold" label="Low Stock Threshold"
-          placeholder="Low stock threshold (optional)" type="number" />
+        <flux:input wire:model="unit_price" label="Base Price *" placeholder="Product price" type="number" />
+        {{-- <flux:input wire:model="cached_stock" label="Available Stock" placeholder="Product stock" variant="filled" readonly /> --}}
         <flux:radio.group wire:model="is_active" label="Status" variant="segmented">
           <flux:radio value="true" label="Active" class="cursor-pointer" />
           <flux:radio value="false" label="Inactive" class="cursor-pointer" />
         </flux:radio.group>
       </div>
 
+      {{-- <div class="grid grid-cols-2 gap-4">
+        <flux:input wire:model="low_stock_threshold" label="Low Stock Threshold"
+          placeholder="Low stock threshold (optional)" type="number" />
+      </div> --}}
+
+      @if (!$productId)
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <flux:input wire:model="primaryImage" label="Primary Image *" placeholder="Product image" type="file" />
+        </div>
+      @endif
+
       <div class="grid grid-cols-1 gap-4">
         <flux:textarea wire:model="description" label="Description" placeholder="Product description" rows="4" />
       </div>
 
-      @if (!$productId)
-        <div class="grid grid-cols-1 gap-4">
-          <flux:input wire:model="primaryImage" label="Primary Image *" placeholder="Product image" type="file" />
+      <div class="space-y-4 border-t pt-4">
+        <flux:heading size="lg">Product Location</flux:heading>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <flux:select wire:model="floor" label="Floor" placeholder="Floor location">
+            <flux:select.option value="first" class="text-gray-800 dark:text-gray-200">First</flux:select.option>
+            <flux:select.option value="second" class="text-gray-800 dark:text-gray-200">Second</flux:select.option>
+          </flux:select>
+          <flux:input wire:model="aisle" label="Aisle" placeholder="Aisle location" />
+          <flux:input wire:model="shelf" label="Shelf" placeholder="Shelf location" />
         </div>
-      @endif
+      </div>
 
       <div class="flex">
         <flux:spacer />

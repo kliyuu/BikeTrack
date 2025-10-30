@@ -54,7 +54,7 @@
             </tr>
           </thead>
 
-          <tbody class="bg-white divide-y divide-gray-200 dark:divide-gray-700">
+          <tbody class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-800">
             @forelse ($warehouses as $warehouse)
               <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                 <td class="px-6 py-4 whitespace-nowrap">
